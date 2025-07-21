@@ -1,15 +1,11 @@
 version: 1
 backend:
   phases:
-    preBuild:
-      commands:
-        - curl -sL https://rpm.nodesource.com/setup_20.x | sudo bash -
-        - sudo yum install -y nodejs
     build:
       commands:
         - npm ci --cache .npm --prefer-offline --legacy-peer-deps
         - npx ampx pipeline-deploy --branch $AWS_BRANCH --app-id $AWS_APP_ID
-frontend:  # Placeholder for backend-only
+frontend:
   phases:
     build:
       commands:
