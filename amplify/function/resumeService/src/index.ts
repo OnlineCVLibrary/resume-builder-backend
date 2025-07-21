@@ -46,12 +46,21 @@ export const handler = async (event: any) => {
         throw new Error('Access Denied');
       }
 
-      // Query user tier
+      // Query user tier and resume count for limit
       const userData = await docClient.send(new GetCommand({
         TableName: 'User',
         Key: { userId }
       }));
-      if (!userData.Item || userData.Item.subscriptionTier === 'free' && /* check limit */) {
+      if (!userData.Item) {
+        throw new Error('User not found');
+      }
+      const resumesCount = await docClient.send(new QueryCommand({
+        TableName: 'Resume',
+        KeyConditionExpression: 'userId = :userId',
+        ExpressionAttributeValues: { ':userId': userId },
+        Select: 'COUNT'
+      }));
+      if (userData.Item.subscriptionTier === 'free' && resumesCount.Count! >= 5) {
         throw new Error('Upgrade Required');
       }
 

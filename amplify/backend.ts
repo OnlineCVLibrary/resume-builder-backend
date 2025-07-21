@@ -17,6 +17,7 @@ import * as verifiedpermissions from 'aws-cdk-lib/aws-verifiedpermissions';
 import * as ecs from 'aws-cdk-lib/aws-ecs';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as ecs_patterns from 'aws-cdk-lib/aws-ecs-patterns';
+import { Function } from 'aws-cdk-lib/aws-lambda';
 
 const backend = defineBackend({
   auth,
@@ -25,39 +26,25 @@ const backend = defineBackend({
   resumeService: defineFunction({
     entry: './function/resumeService/src/index.ts',
     environment: {
-      POLICY_STORE_ID: '', // Set below
-      REDIS_ENDPOINT: '',
-      STORAGE_BUCKET_NAME: storage.resources.bucket.bucketName,
-      PDF_WORKFLOW_ARN: '',
-      ANALYTICS_STREAM: ''
+      STORAGE_BUCKET_NAME: storage.resources.bucket.bucketName
     }
   }),
   templateService: defineFunction({
     entry: './function/templateService/src/index.ts',
     environment: {
-      POLICY_STORE_ID: '',
-      STORAGE_BUCKET_NAME: storage.resources.bucket.bucketName,
-      ANALYTICS_STREAM: ''
+      STORAGE_BUCKET_NAME: storage.resources.bucket.bucketName
     }
   }),
   jobService: defineFunction({
     entry: './function/jobService/src/index.ts',
     environment: {
-      POLICY_STORE_ID: '',
-      STORAGE_BUCKET_NAME: storage.resources.bucket.bucketName,
-      NOTIFICATION_TOPIC: '',
-      ANALYTICS_STREAM: ''
+      STORAGE_BUCKET_NAME: storage.resources.bucket.bucketName
     }
   }),
   pdfTrigger: defineFunction({
     entry: './function/pdfTrigger/src/index.ts',
     environment: {
-      POLICY_STORE_ID: '',
-      STORAGE_BUCKET_NAME: storage.resources.bucket.bucketName,
-      PDF_QUEUE_URL: '',
-      EVENT_BUS_NAME: '',
-      NOTIFICATION_TOPIC: '',
-      ANALYTICS_STREAM: ''
+      STORAGE_BUCKET_NAME: storage.resources.bucket.bucketName
     }
   })
 });
@@ -106,7 +93,14 @@ const pdfQueue = new sqs.Queue(customStack, 'PdfQueue', {
 });
 
 // Step Functions for workflows (example: PDF gen chain)
-const pdfTask = new tasks.LambdaInvoke(customStack, 'PdfGenTask', { /* Placeholder for gen logic */ });
+const pdfGenLambda = new Function(customStack, 'PdfGenLambda', {
+  runtime: cdk.aws_lambda.Runtime.NODEJS_18_X,
+  handler: 'index.handler',
+  code: cdk.aws_lambda.Code.fromInline('exports.handler = async () => { console.log("PDF Gen Placeholder"); return { status: "success" }; };')
+});
+const pdfTask = new tasks.LambdaInvoke(customStack, 'PdfGenTask', {
+  lambdaFunction: pdfGenLambda
+});
 const pdfWorkflow = new sfn.StateMachine(customStack, 'PdfWorkflow', {
   definitionBody: sfn.DefinitionBody.fromChainable(pdfTask)
 });
@@ -163,22 +157,21 @@ backend.addOutput({
   }
 });
 
-// Set env vars from outputs (post-synth, in deployment)
-backend.resumeService.resources.lambda.addEnvironment('POLICY_STORE_ID', policyStore.ref);
-// Similar for others: Repeat for each lambda and env var, e.g.,
-backend.resumeService.resources.lambda.addEnvironment('REDIS_ENDPOINT', redisCluster.attrRedisEndpointAddress);
-backend.resumeService.resources.lambda.addEnvironment('PDF_WORKFLOW_ARN', pdfWorkflow.stateMachineArn);
-backend.resumeService.resources.lambda.addEnvironment('ANALYTICS_STREAM', analyticsStream.streamName);
+// Set env vars from outputs
+(backend.resumeService.resources.lambda as Function).addEnvironment('POLICY_STORE_ID', policyStore.ref);
+(backend.resumeService.resources.lambda as Function).addEnvironment('REDIS_ENDPOINT', redisCluster.attrRedisEndpointAddress);
+(backend.resumeService.resources.lambda as Function).addEnvironment('PDF_WORKFLOW_ARN', pdfWorkflow.stateMachineArn);
+(backend.resumeService.resources.lambda as Function).addEnvironment('ANALYTICS_STREAM', analyticsStream.streamName);
 
-backend.templateService.resources.lambda.addEnvironment('POLICY_STORE_ID', policyStore.ref);
-backend.templateService.resources.lambda.addEnvironment('ANALYTICS_STREAM', analyticsStream.streamName);
+(backend.templateService.resources.lambda as Function).addEnvironment('POLICY_STORE_ID', policyStore.ref);
+(backend.templateService.resources.lambda as Function).addEnvironment('ANALYTICS_STREAM', analyticsStream.streamName);
 
-backend.jobService.resources.lambda.addEnvironment('POLICY_STORE_ID', policyStore.ref);
-backend.jobService.resources.lambda.addEnvironment('NOTIFICATION_TOPIC', notificationTopic.topicArn);
-backend.jobService.resources.lambda.addEnvironment('ANALYTICS_STREAM', analyticsStream.streamName);
+(backend.jobService.resources.lambda as Function).addEnvironment('POLICY_STORE_ID', policyStore.ref);
+(backend.jobService.resources.lambda as Function).addEnvironment('NOTIFICATION_TOPIC', notificationTopic.topicArn);
+(backend.jobService.resources.lambda as Function).addEnvironment('ANALYTICS_STREAM', analyticsStream.streamName);
 
-backend.pdfTrigger.resources.lambda.addEnvironment('POLICY_STORE_ID', policyStore.ref);
-backend.pdfTrigger.resources.lambda.addEnvironment('PDF_QUEUE_URL', pdfQueue.queueUrl);
-backend.pdfTrigger.resources.lambda.addEnvironment('EVENT_BUS_NAME', eventBus.eventBusName);
-backend.pdfTrigger.resources.lambda.addEnvironment('NOTIFICATION_TOPIC', notificationTopic.topicArn);
-backend.pdfTrigger.resources.lambda.addEnvironment('ANALYTICS_STREAM', analyticsStream.streamName);
+(backend.pdfTrigger.resources.lambda as Function).addEnvironment('POLICY_STORE_ID', policyStore.ref);
+(backend.pdfTrigger.resources.lambda as Function).addEnvironment('PDF_QUEUE_URL', pdfQueue.queueUrl);
+(backend.pdfTrigger.resources.lambda as Function).addEnvironment('EVENT_BUS_NAME', eventBus.eventBusName);
+(backend.pdfTrigger.resources.lambda as Function).addEnvironment('NOTIFICATION_TOPIC', notificationTopic.topicArn);
+(backend.pdfTrigger.resources.lambda as Function).addEnvironment('ANALYTICS_STREAM', analyticsStream.streamName);

@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo "Error: no test specified" && exit 1"
   },
   "repository": {
     "type": "git",
@@ -25,7 +25,8 @@
     "constructs": "^10.4.2",
     "esbuild": "^0.25.8",
     "tsx": "^4.20.3",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "@types/node": "^18.0.0"
   },
   "dependencies": {
     "@aws-amplify/backend-auth": "^1.7.1",
@@ -46,6 +47,8 @@
     "aws-amplify": "^6.15.3",
     "aws-xray-sdk-core": "^3.10.3",
     "ioredis": "^5.6.1",
-    "stripe": "^18.3.0"
+    "stripe": "^18.3.0",
+    "@aws-sdk/client-cloudwatch": "^3.848.0",
+    "uuid": "^9.0.0"
   }
 }

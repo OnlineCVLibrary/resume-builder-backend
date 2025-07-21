@@ -46,14 +46,13 @@ export const handler = async (event: any) => {
   const secret = await secretsClient.send(new GetSecretValueCommand({ SecretId: 'resumeConfig' }));
   const config = JSON.parse(secret.SecretString || '{}');
 
-  // Query user tier
+  // Query user tier (PDF is premium feature)
   const userData = await docClient.send(new GetCommand({
     TableName: 'User',
     Key: { userId }
   }));
   const isPremium = userData.Item?.subscriptionTier === 'premium';
-
-  if (!isPremium && /* not purchased */) throw new Error('Upgrade Required');
+  if (!isPremium) throw new Error('Upgrade Required');
 
   // Fetch resume metadata and JSON
   const resume = await docClient.send(new GetCommand({

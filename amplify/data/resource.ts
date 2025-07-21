@@ -35,7 +35,8 @@ export const schema = a.schema({
     jobId: a.id().required(),
     skills: a.string().array(),
     description: a.string()
-  }).authorization(allow => [allow.authenticated()])
+  }).secondaryIndexes((index) => [index('skills')])
+    .authorization(allow => [allow.authenticated()])
 });
 
 export type Schema = ClientSchema<typeof schema>;
@@ -43,7 +44,6 @@ export type Schema = ClientSchema<typeof schema>;
 export const data = defineData({
   schema,
   authorizationModes: {
-    defaultAuthorizationMode: 'userPool',
-    userPoolConfig: {}
+    defaultAuthorizationMode: 'userPool'
   }
 });

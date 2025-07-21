@@ -53,7 +53,7 @@ export const handler = async (event: any) => {
           Key: item.s3Path
         }));
         const body = await s3Data.Body?.transformToString();
-        return { ...item, file: body };
+        return { ...item, file: body } as { templateId: string; isPremium: boolean; file: string | undefined; s3Path: string; tenantId: string };
       }) || []);
 
       // Query purchases for premium

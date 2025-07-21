@@ -69,10 +69,10 @@ export const handler = async (event: any) => {
       }));
       const skills = JSON.parse(new TextDecoder().decode(bedrockResponse.body)).completion.match(/skills: (.*)/)?.[1].split(', ') || [];
 
-      // Query jobs by skills
+      // Query jobs by skills (using GSI)
       const jobs = await docClient.send(new QueryCommand({
         TableName: 'Job',
-        IndexName: 'SkillsIndex', // Assume GSI on skills
+        IndexName: 'skills-index', // Auto-generated name for secondary index
         KeyConditionExpression: 'skills = :skills',
         ExpressionAttributeValues: { ':skills': skills.join(',') }
       }));
