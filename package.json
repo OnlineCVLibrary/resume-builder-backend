@@ -21,12 +21,12 @@
   "devDependencies": {
     "@aws-amplify/backend": "^1.16.1",
     "@aws-amplify/backend-cli": "^1.8.0",
+    "@types/node": "^18.0.0",
     "aws-cdk-lib": "^2.206.0",
     "constructs": "^10.4.2",
     "esbuild": "^0.25.8",
     "tsx": "^4.20.3",
-    "typescript": "^5.8.3",
-    "@types/node": "^18.0.0"
+    "typescript": "^5.8.3"
   },
   "dependencies": {
     "@aws-amplify/backend-auth": "^1.7.1",
@@ -34,6 +34,7 @@
     "@aws-amplify/backend-function": "^1.14.1",
     "@aws-amplify/backend-storage": "^1.4.1",
     "@aws-sdk/client-bedrock-runtime": "^3.848.0",
+    "@aws-sdk/client-cloudwatch": "^3.848.0",
     "@aws-sdk/client-dynamodb": "^3.848.0",
     "@aws-sdk/client-eventbridge": "^3.848.0",
     "@aws-sdk/client-kinesis": "^3.848.0",
@@ -44,7 +45,6 @@
     "@aws-sdk/client-sqs": "^3.848.0",
     "@aws-sdk/client-verifiedpermissions": "^3.848.0",
     "@aws-sdk/lib-dynamodb": "^3.848.0",
-    "@aws-sdk/client-cloudwatch": "^3.848.0",
     "aws-amplify": "^6.15.3",
     "aws-xray-sdk-core": "^3.10.3",
     "ioredis": "^5.6.1",
