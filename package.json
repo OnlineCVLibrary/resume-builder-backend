@@ -44,11 +44,11 @@
     "@aws-sdk/client-sqs": "^3.848.0",
     "@aws-sdk/client-verifiedpermissions": "^3.848.0",
     "@aws-sdk/lib-dynamodb": "^3.848.0",
+    "@aws-sdk/client-cloudwatch": "^3.848.0",
     "aws-amplify": "^6.15.3",
     "aws-xray-sdk-core": "^3.10.3",
     "ioredis": "^5.6.1",
     "stripe": "^18.3.0",
-    "@aws-sdk/client-cloudwatch": "^3.848.0",
     "uuid": "^9.0.0"
   }
 }
