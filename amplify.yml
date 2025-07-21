@@ -3,8 +3,8 @@ backend:
   phases:
     preBuild:
       commands:
-        - curl -sL https://deb.nodesource.com/setup_20.x | bash -
-        - apt-get install -y nodejs
+        - curl -sL https://rpm.nodesource.com/setup_20.x | bash -
+        - yum install -y nodejs
     build:
       commands:
         - npm ci --cache .npm --prefer-offline --legacy-peer-deps
