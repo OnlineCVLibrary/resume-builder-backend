@@ -3,8 +3,9 @@ backend:
   phases:
     preBuild:
       commands:
-        - curl -sL https://deb.nodesource.com/setup_20.x | bash -
-        - apt-get install -y nodejs
+        - echo "20" > .nvmrc  # Specify Node.js 20
+        - nvm install 20      # Install Node.js 20 using nvm
+        - nvm use 20          # Use Node.js 20
     build:
       commands:
         - npm ci --cache .npm --prefer-offline --legacy-peer-deps
