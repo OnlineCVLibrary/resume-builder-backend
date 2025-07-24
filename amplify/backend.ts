@@ -26,25 +26,25 @@ const backend = defineBackend({
   resumeService: defineFunction({
     entry: './function/resumeService/src/index.ts',
     environment: {
-      STORAGE_BUCKET_NAME: storage.resources.bucket.bucketName
+      STORAGE_BUCKET_NAME: backend.storage.resources.bucket?.bucketName || ''
     }
   }),
   templateService: defineFunction({
     entry: './function/templateService/src/index.ts',
     environment: {
-      STORAGE_BUCKET_NAME: storage.resources.bucket.bucketName
+      STORAGE_BUCKET_NAME: backend.storage.resources.bucket?.bucketName || ''
     }
   }),
   jobService: defineFunction({
     entry: './function/jobService/src/index.ts',
     environment: {
-      STORAGE_BUCKET_NAME: storage.resources.bucket.bucketName
+      STORAGE_BUCKET_NAME: backend.storage.resources.bucket?.bucketName || ''
     }
   }),
   pdfTrigger: defineFunction({
     entry: './function/pdfTrigger/src/index.ts',
     environment: {
-      STORAGE_BUCKET_NAME: storage.resources.bucket.bucketName
+      STORAGE_BUCKET_NAME: backend.storage.resources.bucket?.bucketName || ''
     }
   })
 });
@@ -111,7 +111,7 @@ const pdfCompletionRule = new events.Rule(customStack, 'PdfCompletionRule', {
   eventBus,
   eventPattern: { detailType: ['PDFCompleted'] }
 });
-pdfCompletionRule.addTarget(new targets.SnsTopic(/* SNS below */));
+pdfCompletionRule.addTarget(new targets.SnsTopic(notificationTopic));
 
 // SNS
 const notificationTopic = new sns.Topic(customStack, 'ResumeNotifications');
@@ -121,7 +121,7 @@ const analyticsStream = new kinesis.Stream(customStack, 'ResumeAnalytics', { sha
 
 // Secrets Manager
 new secretsmanager.Secret(customStack, 'ResumeSecrets', {
-  generateSecretString: { secretStringTemplate: JSON.stringify({ s3Bucket: storage.resources.bucket.bucketName }) }
+  generateSecretString: { secretStringTemplate: JSON.stringify({ s3Bucket: backend.storage.resources.bucket?.bucketName || '' }) }
 });
 
 // ECS Fargate for PDFService (processes SQS)
@@ -133,7 +133,7 @@ const pdfTaskDefinition = new ecs.FargateTaskDefinition(customStack, 'PdfTask', 
 pdfTaskDefinition.addContainer('PdfContainer', {
   image: ecs.ContainerImage.fromRegistry('your-ecr-repo-uri'), // Your PDF gen image
   logging: ecs.LogDrivers.awsLogs({ streamPrefix: 'pdf' }),
-  environment: { BUCKET_NAME: storage.resources.bucket.bucketName } // Pass env
+  environment: { BUCKET_NAME: backend.storage.resources.bucket?.bucketName || '' } // Pass env
 });
 const queueProcessingService = new ecs_patterns.QueueProcessingFargateService(customStack, 'PdfQueueService', {
   cluster,
