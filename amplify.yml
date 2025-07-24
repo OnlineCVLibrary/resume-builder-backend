@@ -3,5 +3,22 @@ backend:
   phases:
     preBuild:
       commands:
-        - nvm install 20
-        - nvm use 20
+        - curl -sL https://deb.nodesource.com/setup_20.x | bash -
+        - apt-get install -y nodejs
+    build:
+      commands:
+        - npm ci --cache .npm --prefer-offline --legacy-peer-deps
+        - npx ampx pipeline-deploy --branch $AWS_BRANCH --app-id $AWS_APP_ID
+frontend:  # Placeholder for backend-only
+  phases:
+    build:
+      commands:
+        - mkdir ./dist && touch ./dist/index.html
+  artifacts:
+    baseDirectory: dist
+    files:
+      - '**/*'
+  cache:
+    paths:
+      - .npm/**/*
+      - node_modules/**/*
