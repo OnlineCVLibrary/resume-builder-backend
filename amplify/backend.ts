@@ -24,30 +24,24 @@ const backend = defineBackend({
   data,
   storage,
   resumeService: defineFunction({
-    entry: './function/resumeService/src/index.ts',
-    environment: {
-      STORAGE_BUCKET_NAME: backend.storage.resources.bucket?.bucketName || ''
-    }
+    entry: './function/resumeService/src/index.ts'
   }),
   templateService: defineFunction({
-    entry: './function/templateService/src/index.ts',
-    environment: {
-      STORAGE_BUCKET_NAME: backend.storage.resources.bucket?.bucketName || ''
-    }
+    entry: './function/templateService/src/index.ts'
   }),
   jobService: defineFunction({
-    entry: './function/jobService/src/index.ts',
-    environment: {
-      STORAGE_BUCKET_NAME: backend.storage.resources.bucket?.bucketName || ''
-    }
+    entry: './function/jobService/src/index.ts'
   }),
   pdfTrigger: defineFunction({
-    entry: './function/pdfTrigger/src/index.ts',
-    environment: {
-      STORAGE_BUCKET_NAME: backend.storage.resources.bucket?.bucketName || ''
-    }
+    entry: './function/pdfTrigger/src/index.ts'
   })
 });
+
+// Set environments after backend is defined
+backend.resumeService.addEnvironment('STORAGE_BUCKET_NAME', backend.storage.resources.bucket?.bucketName || '');
+backend.templateService.addEnvironment('STORAGE_BUCKET_NAME', backend.storage.resources.bucket?.bucketName || '');
+backend.jobService.addEnvironment('STORAGE_BUCKET_NAME', backend.storage.resources.bucket?.bucketName || '');
+backend.pdfTrigger.addEnvironment('STORAGE_BUCKET_NAME', backend.storage.resources.bucket?.bucketName || '');
 
 // Attach resolvers to AppSync
 const resumeDS = backend.data.addLambdaDataSource('resumeDS', backend.resumeService);
@@ -158,20 +152,20 @@ backend.addOutput({
 });
 
 // Set env vars from outputs
-(backend.resumeService.resources.lambda as Function).addEnvironment('POLICY_STORE_ID', policyStore.ref);
-(backend.resumeService.resources.lambda as Function).addEnvironment('REDIS_ENDPOINT', redisCluster.attrRedisEndpointAddress);
-(backend.resumeService.resources.lambda as Function).addEnvironment('PDF_WORKFLOW_ARN', pdfWorkflow.stateMachineArn);
-(backend.resumeService.resources.lambda as Function).addEnvironment('ANALYTICS_STREAM', analyticsStream.streamName);
+backend.resumeService.addEnvironment('POLICY_STORE_ID', policyStore.ref);
+backend.resumeService.addEnvironment('REDIS_ENDPOINT', redisCluster.attrRedisEndpointAddress);
+backend.resumeService.addEnvironment('PDF_WORKFLOW_ARN', pdfWorkflow.stateMachineArn);
+backend.resumeService.addEnvironment('ANALYTICS_STREAM', analyticsStream.streamName);
 
-(backend.templateService.resources.lambda as Function).addEnvironment('POLICY_STORE_ID', policyStore.ref);
-(backend.templateService.resources.lambda as Function).addEnvironment('ANALYTICS_STREAM', analyticsStream.streamName);
+backend.templateService.addEnvironment('POLICY_STORE_ID', policyStore.ref);
+backend.templateService.addEnvironment('ANALYTICS_STREAM', analyticsStream.streamName);
 
-(backend.jobService.resources.lambda as Function).addEnvironment('POLICY_STORE_ID', policyStore.ref);
-(backend.jobService.resources.lambda as Function).addEnvironment('NOTIFICATION_TOPIC', notificationTopic.topicArn);
-(backend.jobService.resources.lambda as Function).addEnvironment('ANALYTICS_STREAM', analyticsStream.streamName);
+backend.jobService.addEnvironment('POLICY_STORE_ID', policyStore.ref);
+backend.jobService.addEnvironment('NOTIFICATION_TOPIC', notificationTopic.topicArn);
+backend.jobService.addEnvironment('ANALYTICS_STREAM', analyticsStream.streamName);
 
-(backend.pdfTrigger.resources.lambda as Function).addEnvironment('POLICY_STORE_ID', policyStore.ref);
-(backend.pdfTrigger.resources.lambda as Function).addEnvironment('PDF_QUEUE_URL', pdfQueue.queueUrl);
-(backend.pdfTrigger.resources.lambda as Function).addEnvironment('EVENT_BUS_NAME', eventBus.eventBusName);
-(backend.pdfTrigger.resources.lambda as Function).addEnvironment('NOTIFICATION_TOPIC', notificationTopic.topicArn);
-(backend.pdfTrigger.resources.lambda as Function).addEnvironment('ANALYTICS_STREAM', analyticsStream.streamName);
+backend.pdfTrigger.addEnvironment('POLICY_STORE_ID', policyStore.ref);
+backend.pdfTrigger.addEnvironment('PDF_QUEUE_URL', pdfQueue.queueUrl);
+backend.pdfTrigger.addEnvironment('EVENT_BUS_NAME', eventBus.eventBusName);
+backend.pdfTrigger.addEnvironment('NOTIFICATION_TOPIC', notificationTopic.topicArn);
+backend.pdfTrigger.addEnvironment('ANALYTICS_STREAM', analyticsStream.streamName);
