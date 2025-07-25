@@ -99,6 +99,9 @@ const pdfWorkflow = new sfn.StateMachine(customStack, 'PdfWorkflow', {
   definitionBody: sfn.DefinitionBody.fromChainable(pdfTask)
 });
 
+// SNS
+const notificationTopic = new sns.Topic(customStack, 'ResumeNotifications');
+
 // EventBridge
 const eventBus = new events.EventBus(customStack, 'ResumeEventBus');
 const pdfCompletionRule = new events.Rule(customStack, 'PdfCompletionRule', {
@@ -106,9 +109,6 @@ const pdfCompletionRule = new events.Rule(customStack, 'PdfCompletionRule', {
   eventPattern: { detailType: ['PDFCompleted'] }
 });
 pdfCompletionRule.addTarget(new targets.SnsTopic(notificationTopic));
-
-// SNS
-const notificationTopic = new sns.Topic(customStack, 'ResumeNotifications');
 
 // Kinesis
 const analyticsStream = new kinesis.Stream(customStack, 'ResumeAnalytics', { shardCount: 1 });
