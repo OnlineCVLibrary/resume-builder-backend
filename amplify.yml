@@ -44,8 +44,17 @@ phases:
       - echo "IAM policy log:"
       - cat iam_policy.log || echo "No IAM policy log available"
 
-cache:
-  paths:
-    - .npm/**/*
-    - node_modules/**/*
-    - amplify/.amplify/artifacts/cache/**/*
+frontend:
+  phases:
+    build:
+      commands:
+        - echo "No frontend build required"
+  artifacts:
+    baseDirectory: .
+    files:
+      - README.md
+  cache:
+    paths:
+      - .npm/**/*
+      - node_modules/**/*
+      - amplify/.amplify/artifacts/cache/**/*
