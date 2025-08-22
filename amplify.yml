@@ -1,25 +1,14 @@
-version: 1
-backend:
-  phases:
-    preBuild:
-      commands:
-        - echo "20" > .nvmrc  # Specify Node.js 20
-        - nvm install 20      # Install Node.js 20 using nvm
-        - nvm use 20          # Use Node.js 20
-    build:
-      commands:
-        - npm ci --cache .npm --prefer-offline --legacy-peer-deps
-        - npx ampx pipeline-deploy --branch $AWS_BRANCH --app-id $AWS_APP_ID
-frontend:  # Placeholder for backend-only
-  phases:
-    build:
-      commands:
-        - mkdir ./dist && touch ./dist/index.html
-  artifacts:
-    baseDirectory: dist
-    files:
-      - '**/*'
-  cache:
-    paths:
-      - .npm/**/*
-      - node_modules/**/*
+version: 0.2
+phases:
+  pre_build:
+    commands:
+      - echo "20" > .nvmrc
+      - nvm install 20
+  build:
+    commands:
+      - npm install
+      - amplify push --yes
+cache:
+  paths:
+    - 'node_modules/**/*'
+    - 'amplify/.amplify/artifacts/cache/**/*'
