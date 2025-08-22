@@ -13,7 +13,7 @@ backend:
         - aws s3 mb s3://resume-builder-backend-cache --region eu-west-1 2>&1 | tee bucket_creation.log || echo "Bucket creation failed, check bucket_creation.log"
         - echo "Attaching IAM policy for cache bucket..."
         - |
-          aws iam put-role-policy --role-name codebuild-resume-builder-backend-service-role --policy-name S3CacheAccess --policy-document '{
+          aws iam put-role-policy --role-name AmplifySSRLoggingRole-c6eba2d1-6bf4-4bf6-bb22-5fbae1d9746f --policy-name S3CacheAccess --policy-document '{
             "Version": "2012-10-17",
             "Statement": [
               {
