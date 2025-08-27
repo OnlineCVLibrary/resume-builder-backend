@@ -17,6 +17,7 @@ import * as verifiedpermissions from 'aws-cdk-lib/aws-verifiedpermissions';
 import * as ecs from 'aws-cdk-lib/aws-ecs';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as ecs_patterns from 'aws-cdk-lib/aws-ecs-patterns';
+import * as iam from 'aws-cdk-lib/aws-iam';
 import { Function } from 'aws-cdk-lib/aws-lambda';
 
 const backend = defineBackend({
@@ -37,7 +38,7 @@ const backend = defineBackend({
   })
 });
 
-// Set environments after backend is defined
+// Set environments
 backend.resumeService.addEnvironment('STORAGE_BUCKET_NAME', backend.storage.resources.bucket?.bucketName || '');
 backend.templateService.addEnvironment('STORAGE_BUCKET_NAME', backend.storage.resources.bucket?.bucketName || '');
 backend.jobService.addEnvironment('STORAGE_BUCKET_NAME', backend.storage.resources.bucket?.bucketName || '');
@@ -63,6 +64,24 @@ backend.data.resources.graphqlApi.addResolver({ typeName: 'Mutation', fieldName:
 // CDK Custom Resources
 const customStack = new cdk.Stack(backend.data.resources.cdkStack.scope, 'CustomResourcesStack');
 
+// Add permissions to Amplify role
+const amplifyRole = backend.data.resources.cdkStack.node.tryFindChild('AmplifyRole') as iam.Role;
+amplifyRole.addToPolicy(new iam.PolicyStatement({
+  actions: [
+    'elasticache:CreateCacheCluster',
+    'elasticache:CreateSubnetGroup',
+    'sqs:CreateQueue',
+    'sfn:CreateStateMachine',
+    'events:CreateEventBus',
+    'sns:CreateTopic',
+    'kinesis:CreateStream',
+    'secretsmanager:CreateSecret',
+    'ecs:RunTask',
+    'ecs:DescribeTasks'
+  ],
+  resources: ['*']
+}));
+
 // Verified Permissions
 const policyStore = new verifiedpermissions.CfnPolicyStore(customStack, 'ResumePolicyStore', {
   validationSettings: { mode: 'STRICT' }
@@ -80,15 +99,16 @@ const redisCluster = new elasticache.CfnCacheCluster(customStack, 'ResumeRedis',
   numCacheNodes: 1,
   cacheSubnetGroupName: subnetGroup.ref
 });
+redisCluster.addDependency(subnetGroup);
 
 // SQS for PDF
 const pdfQueue = new sqs.Queue(customStack, 'PdfQueue', {
-  visibilityTimeout: cdk.Duration.minutes(5) // Match Fargate task time
+  visibilityTimeout: cdk.Duration.minutes(5)
 });
 
-// Step Functions for workflows (example: PDF gen chain)
+// Step Functions
 const pdfGenLambda = new Function(customStack, 'PdfGenLambda', {
-  runtime: cdk.aws_lambda.Runtime.NODEJS_18_X,
+  runtime: cdk.aws_lambda.Runtime.NODEJS_20_X,
   handler: 'index.handler',
   code: cdk.aws_lambda.Code.fromInline('exports.handler = async () => { console.log("PDF Gen Placeholder"); return { status: "success" }; };')
 });
@@ -118,16 +138,16 @@ new secretsmanager.Secret(customStack, 'ResumeSecrets', {
   generateSecretString: { secretStringTemplate: JSON.stringify({ s3Bucket: backend.storage.resources.bucket?.bucketName || '' }) }
 });
 
-// ECS Fargate for PDFService (processes SQS)
+// ECS Fargate
 const cluster = new ecs.Cluster(customStack, 'PdfCluster', { vpc });
 const pdfTaskDefinition = new ecs.FargateTaskDefinition(customStack, 'PdfTask', {
   memoryLimitMiB: 512,
   cpu: 256
 });
 pdfTaskDefinition.addContainer('PdfContainer', {
-  image: ecs.ContainerImage.fromRegistry('your-ecr-repo-uri'), // Your PDF gen image
+  image: ecs.ContainerImage.fromRegistry('amazon/amazon-ecs-sample'), // Replace with your ECR URI
   logging: ecs.LogDrivers.awsLogs({ streamPrefix: 'pdf' }),
-  environment: { BUCKET_NAME: backend.storage.resources.bucket?.bucketName || '' } // Pass env
+  environment: { BUCKET_NAME: backend.storage.resources.bucket?.bucketName || '' }
 });
 const queueProcessingService = new ecs_patterns.QueueProcessingFargateService(customStack, 'PdfQueueService', {
   cluster,
@@ -135,10 +155,10 @@ const queueProcessingService = new ecs_patterns.QueueProcessingFargateService(cu
   queue: pdfQueue,
   minScalingCapacity: 0,
   maxScalingCapacity: 5,
-  scalingSteps: [{ upper: 0, change: 0 }, { lower: 1, change: +1 }] // Scale on messages
+  scalingSteps: [{ upper: 0, change: 0 }, { lower: 1, change: +1 }]
 });
 
-// Outputs for env vars
+// Outputs
 backend.addOutput({
   custom: {
     policyStoreId: policyStore.ref,
@@ -151,7 +171,7 @@ backend.addOutput({
   }
 });
 
-// Set env vars from outputs
+// Set env vars
 backend.resumeService.addEnvironment('POLICY_STORE_ID', policyStore.ref);
 backend.resumeService.addEnvironment('REDIS_ENDPOINT', redisCluster.attrRedisEndpointAddress);
 backend.resumeService.addEnvironment('PDF_WORKFLOW_ARN', pdfWorkflow.stateMachineArn);
